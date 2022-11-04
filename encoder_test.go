@@ -2,11 +2,12 @@ package yaml_encoder_test
 
 import (
 	"fmt"
+	"testing"
 
-	encoder "github.com/zwgblue/yaml-encoder"
+	encoder "github.com/wetor/yaml-encoder"
 )
 
-func ExampleEncoder() {
+func TestEncoder(t *testing.T) {
 	type DBConfig struct {
 		Username string `yaml:"username" comment:"this is the username of database"`
 		Password string `yaml:"password" comment:"this is the password of database"`
@@ -35,4 +36,8 @@ func ExampleEncoder() {
 	// username: root
 	// # this is the password of database
 	// password: xxxxxx
+	// # 主机名
+	// host: 127.0.0.1
+	// # 端口号
+	// port: 4444
 }

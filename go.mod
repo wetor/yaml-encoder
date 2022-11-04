@@ -1,4 +1,4 @@
-module github.com/zwgblue/yaml-encoder
+module github.com/wetor/yaml-encoder
 
 go 1.16
 

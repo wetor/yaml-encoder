@@ -11,7 +11,7 @@ package main
 
 import (
 	"fmt"
-	encoder "github.com/zwgblue/yaml-encoder"
+	encoder "github.com/wetor/yaml-encoder"
 )
 
 type DBConfig struct {
