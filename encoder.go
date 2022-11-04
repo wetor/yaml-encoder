@@ -32,6 +32,7 @@ const (
 type Options struct {
 	CommentsFlag CommentsFlag
 	OmitEmpty    bool
+	CommentsMap  map[string]string
 }
 
 func newOptions(opts ...Option) *Options {
@@ -61,6 +62,13 @@ func WithComments(flag CommentsFlag) Option {
 func WithOmitEmpty(value bool) Option {
 	return func(o *Options) {
 		o.OmitEmpty = value
+	}
+}
+
+// WithCommentsMap enables comments from map.
+func WithCommentsMap(m map[string]string) Option {
+	return func(o *Options) {
+		o.CommentsMap = m
 	}
 }
 
@@ -192,8 +200,16 @@ func toYamlNode(in interface{}, options *Options) (*yaml.Node, error) {
 				continue
 			}
 
-			comment := t.Field(i).Tag.Get("comment")
 			tag := t.Field(i).Tag.Get("yaml")
+			comment, has := t.Field(i).Tag.Lookup("comment")
+			if options.CommentsMap != nil && !has {
+				commentKey, has := t.Field(i).Tag.Lookup("comment_key")
+				// default use yaml
+				if !has {
+					commentKey = tag
+				}
+				comment = options.CommentsMap[commentKey]
+			}
 			parts := strings.Split(tag, ",")
 			fieldName := parts[0]
 			parts = parts[1:]

@@ -8,16 +8,26 @@ import (
 
 func ExampleEncoder() {
 	type DBConfig struct {
-		Username string `comment:"this is the username of database"`
-		Password string `comment:"this is the password of database"`
+		Username string `yaml:"username" comment:"this is the username of database"`
+		Password string `yaml:"password" comment:"this is the password of database"`
+		Host     string `yaml:"host"`
+		Port     int    `yaml:"port" comment_key:"PORT"`
 	}
 
 	config := DBConfig{
 		Username: "root",
 		Password: "xxxxxx",
+		Host:     "127.0.0.1",
+		Port:     4444,
 	}
 
-	encoder := encoder.NewEncoder(config, encoder.WithComments(encoder.CommentsOnHead))
+	encoder := encoder.NewEncoder(config,
+		encoder.WithComments(encoder.CommentsOnHead),
+		encoder.WithCommentsMap(map[string]string{
+			"host": "主机名",
+			"PORT": "端口号",
+		}),
+	)
 	content, _ := encoder.Encode()
 	fmt.Printf("%s", content)
 	// Output:
