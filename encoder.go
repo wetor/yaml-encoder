@@ -1,6 +1,8 @@
 package yaml_encoder
 
 import (
+	"bytes"
+	"fmt"
 	"reflect"
 	"sort"
 	"strings"
@@ -122,6 +124,55 @@ func (e *Encoder) Encode() ([]byte, error) {
 	}
 
 	return yaml.Marshal(node)
+}
+
+// EncodeDoc converts comment to json.
+func (e *Encoder) EncodeDoc() ([]byte, error) {
+	if e.options.CommentsFlag == CommentsDisabled {
+		return yaml.Marshal(e.value)
+	}
+	node, err := e.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	jsonStr := e.encodeDoc(node)
+
+	return []byte(jsonStr[:len(jsonStr)-2]), nil
+}
+
+var replacer = strings.NewReplacer(`\`, `\\`, `"`, `\"`, "\n", `\n`, "\r", `\r`, "\t", `\t`)
+
+func (e *Encoder) encodeDoc(node *yaml.Node) string {
+	buf := bytes.NewBuffer(nil)
+	if node.Kind == yaml.MappingNode && len(node.Content) > 0 {
+		buf.WriteString("{")
+		if len(node.Value) > 0 {
+			buf.WriteString(fmt.Sprintf("\"_comment\": \"%s\", ", replacer.Replace(node.Value)))
+		}
+		isKey := true
+		comment := ""
+		for _, n := range node.Content {
+			if isKey {
+				comment = n.HeadComment
+				buf.WriteString(fmt.Sprintf("\"%s\": ", n.Value))
+				isKey = false
+			} else {
+				n.Value = comment
+				buf.WriteString(e.encodeDoc(n))
+				isKey = true
+			}
+		}
+		if buf.Len() > 2 {
+			buf.Truncate(buf.Len() - 2)
+		}
+		buf.WriteString("}, ")
+
+	} else if node.Kind == yaml.ScalarNode {
+		buf.WriteString(fmt.Sprintf("\"%s\", ", replacer.Replace(node.Value)))
+	} else if node.Kind == yaml.SequenceNode {
+		buf.WriteString(fmt.Sprintf("\"%s\", ", replacer.Replace(node.Value)))
+	}
+	return buf.String()
 }
 
 func isEmpty(value reflect.Value) bool {
